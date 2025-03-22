@@ -1,0 +1,24 @@
+#!/bin/bash
+#check for root/sudo, exit 0 if gone
+if [ "$EUID" -ne  0 ]; then
+        echo "Run me as root!"
+        exit
+fi
+
+installmod() {
+	if [ -f "/usr/bin/$1" ]; then
+		echo "You are about to overwrite /usr/bin/$1"
+		read -p "Continue? [y/n] " yn && [[ $yn == [yY] || $yn == [yY][eE][sS] ]] || exit 1
+	fi
+
+	cp ./$1 /usr/bin/$1
+	chmod +x /usr/bin/$1
+}
+
+installmod jails
+installmod jailmake
+installmod jaillink
+
+mkdir /opt/chroots
+echo "Done!"
+jails help

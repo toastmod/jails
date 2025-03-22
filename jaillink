@@ -1,0 +1,71 @@
+#!/bin/bash
+# Check for root/sudo
+if [ "$EUID" -ne  0 ]; then
+        echo "Run me as root!"
+        exit
+fi
+
+owwarn() {
+	if [ -f "$1" ]; then
+		echo "You are about to overwrite $1"
+		read -p "Continue? [y/n] " yn && [[ $yn == [yY] || $yn == [yY][eE][sS] ]] || exit 1
+	fi
+}
+
+# makethelink [jail name] [shortcut name] [command]
+makethelink() {
+	owwarn "/usr/bin/$2"
+	echo "jails $1 $3" > /usr/bin/$2
+}
+
+if [ "$#" -eq 1 ]; then
+	if [ "$1" = "help" ]; then
+		echo "	"
+		echo "Generating a user login shortcut:"
+		echo "	jaillink login [jail name] [username] <shortcut name>"
+		echo "	"
+		echo "Generating a shell command shortcut:"
+		echo "	jaillink shell [jail name] [command] <shortcut name>"
+		echo "	"
+		echo "	Note: If no shortcut name is provided, it will be the same as the jail name."
+		exit
+	fi
+fi
+
+if [ "$#" -gt 5 ]; then
+	echo "Too many arguments."
+	echo "Usage:"
+	jaillink help
+	exit
+fi
+
+if [ ! "$#" -eq 4 ]; then
+	echo "Too few arguments."
+	echo "Usage:"
+	jaillink help
+	exit
+fi
+
+if [ "$1" == "login" ]; then
+
+	if [ "$3" == "root" ]; then
+		if [ "$#" -eq 3 ]; then
+			makethelink $2 $2
+		elif [ "$#" -eq 4 ]; then
+			makethelink $2 $4
+		fi
+	fi
+
+	if [ "$#" -eq 3 ]; then
+		makethelink $2 $2 "su -- $3"
+	elif [ "$#" -eq 4 ]; then
+		makethelink $2 $4 "su -- $3"
+	fi
+elif [ "$1" == "shell" ]; then
+	if [ "$#" -eq 3 ]; then
+		makethelink $2 $2 "$3"
+	elif [ "$#" -eq 4 ]; then
+		makethelink $2 $4 "$3"
+	fi
+fi
+

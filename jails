@@ -1,0 +1,122 @@
+#!/bin/bash
+# Check for root/sudo
+if [ "$EUID" -ne  0 ]; then
+        echo "Run me as root!"
+        exit
+fi
+
+jailexists () {
+	if [ ! -d /opt/chroots/$1 ]; then
+		echo "$1 does not exist."
+		exit
+	fi
+}
+
+if [ "$#" -gt 2 ]; then
+	echo "Too many arguments."
+	jails help
+	exit
+fi
+
+if [ ! "$#" -eq 1 ]; then
+	echo "Too few arguments."
+	jails help
+	exit
+fi
+
+if [ "$#" -eq 1 ]; then
+
+
+	if [ "$1" = "help" ]; then
+		echo "Usage:"
+		echo "	jails [name]"
+		echo "	"
+		echo "Mounting and Unmounting:"
+		echo "	jails mount [name]"
+		echo "	jails unmount [name]"
+		echo "	"
+		echo "Making a new chroot jail:"
+		jailmake help
+		echo "	"
+		echo "Making a shortcut:"
+		jaillink help
+		exit
+	fi
+
+	jailexists $1
+
+	if [ ! -f "/opt/chroots/$1/.jails-mounted" ]; then
+		jails mount $1
+	fi
+
+	xhost +si:localuser:root
+	chroot /opt/chroots/$1
+
+elif [ "$#" -eq 2 ]; then
+
+	if [ "$1" = "mount" ]; then
+
+		jailexists $2
+
+		if [ ! -f "/opt/chroots/$2/.jails-mounted" ]; then
+
+			# mount tmp and proc @ /opt/chroots/$2
+			echo "Mounting proc in chroot..."
+			mount --bind /proc /opt/chroots/$2/proc
+			echo "Mounting tmp in chroot..."
+			mount --bind /tmp /opt/chroots/$2/tmp
+			echo "Mounting sys in chroot..."
+			mount --bind /sys /opt/chroots/$2/sys
+			echo "Mounting dev in chroot..."
+			mount --bind /dev /opt/chroots/$2/dev
+			echo "Mounting dev/pts in chroot..."
+			mount --bind /dev/pts /opt/chroots/$2/dev/pts
+
+			# Create mount marker
+			touch /opt/chroots/$2/.jails-mounted
+			exit
+
+		else
+			echo "$2 is already mounted."
+			exit
+		fi
+
+	elif [ "$1" = "unmount" ]; then
+
+
+		jailexists $2
+
+		if [ -f "/opt/chroots/$2/.jails-mounted" ]; then
+
+			# exit cleanly and unmount tmp and proc
+			echo "Unmounting proc..."
+			umount /opt/chroots/$2/proc
+			echo "Unmounting tmp..."
+			umount /opt/chroots/$2/tmp
+			echo "Unmounting sys..."
+			umount /opt/chroots/$2/sys
+			echo "Unmounting dev/pts..."
+			umount /opt/chroots/$2/dev/pts
+			echo "Unmounting dev..."
+			umount /opt/chroots/$2/dev
+
+			# Delete mount marker
+			rm /opt/chroots/$2/.jails-mounted
+			exit
+
+		else
+			echo "$2 is not currently mounted."
+			exit
+		fi
+
+	else
+		jailexists $1
+
+		if [ ! -f "/opt/chroots/$1/.jails-mounted" ]; then
+			jails mount $1
+		fi
+
+		xhost +si:localuser:root
+		chroot /opt/chroots/$1 $2
+	fi
+fi

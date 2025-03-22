@@ -1,0 +1,35 @@
+#!/bin/bash
+# Check for root/sudo
+if [ "$EUID" -ne  0 ]; then
+        echo "Run me as root!"
+        exit
+fi
+
+
+if [ "$#" -eq 1 ]; then
+	if [ "$1" = "help" ]; then
+		echo "	jailmake [name] [arch] [release] [URL]"
+		echo "	example: jailmake debian-chroot amd64 stable http://deb.debian.org/debian/"
+		exit
+	fi
+fi
+
+if [ "$#" -gt 4 ]; then
+	echo "Too many arguments."
+	echo "Usage: "
+	jailmake help
+	exit
+fi
+
+if [ ! "$#" -eq 4 ]; then
+	echo "Too few arguments."
+	echo "Usage: "
+	jailmake help
+	exit
+fi
+
+mkdir /opt/chroots
+mkdir /opt/chroots/$1
+
+debootstrap --arch=$2 $3 /opt/chroots/$1 $4
+
