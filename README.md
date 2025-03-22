@@ -2,6 +2,7 @@
 A simple set of bash scripts for chroot management.
 
 ## Installation
+Install `debootstrap` for your distro before using.
 ```
 git clone https://github.com/toastmod/jails
 cd jails
