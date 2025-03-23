@@ -6,19 +6,19 @@ if [ "$EUID" -ne  0 ]; then
 fi
 
 jailexists () {
-	if [ ! -d /opt/chroots/$1 ]; then
+	if [ ! -d "/opt/chroots/$1" ]; then
 		echo "$1 does not exist."
 		exit
 	fi
 }
 
-if [ "$#" -gt 2 ]; then
+if [ "$#" -gt 3 ]; then
 	echo "Too many arguments."
 	jails help
 	exit
 fi
 
-if [ ! "$#" -eq 1 ]; then
+if [ "$#" -lt 1 ]; then
 	echo "Too few arguments."
 	jails help
 	exit
@@ -29,7 +29,7 @@ if [ "$#" -eq 1 ]; then
 
 	if [ "$1" = "help" ]; then
 		echo "Usage:"
-		echo "	jails [name]"
+		echo "	jails [name] <command>"
 		echo "	"
 		echo "Mounting and Unmounting:"
 		echo "	jails mount [name]"
@@ -46,6 +46,7 @@ if [ "$#" -eq 1 ]; then
 	jailexists $1
 
 	if [ ! -f "/opt/chroots/$1/.jails-mounted" ]; then
+		echo "Mounting..."
 		jails mount $1
 	fi
 

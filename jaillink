@@ -15,7 +15,7 @@ owwarn() {
 # makethelink [jail name] [shortcut name] [command]
 makethelink() {
 	owwarn "/usr/bin/$2"
-	echo "jails $1 $3" > /usr/bin/$2
+	echo "jails $1 \"$3\"" > /usr/bin/$2
 	chmod +x /usr/bin/$2
 }
 
